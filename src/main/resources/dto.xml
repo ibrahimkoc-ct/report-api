@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqlMap  PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN" "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+<sqlMap namespace="dto">
+
+	<typeAlias alias="IBatisDTO" type="com.ba.dto.Dto" />
+
+	<resultMap id="dtoMap" class="IBatisDTO">
+		<result property="Key" column="Key" />
+		<result property="Value" column="Value" />
+
+	</resultMap>
+
+	<select id="getTopFiveProduct" resultMap="dtoMap">
+		SELECT p.title as
+		"Key", SUM(oi.piece) as "Value"
+		FROM Product p INNER JOIN OrderItem oi
+		ON p.id=oi.product_id
+		GROUP by p.title ORDER BY SUM(oi.piece)
+		DESC limit
+		5
+	</select>
+
+	<select id="totalAmountByPaymentType" resultMap="dtoMap">
+		SELECT pt.type
+		as "Key" ,Sum(ot.TotalAmount) as "Value"
+		FROM OrderTable ot INNER JOIN
+		PaymentType pt
+		ON ot.paymentType_id=pt.id
+		GROUP by pt.type
+	</select>
+
+	<select id="waiterSalesAmount" resultMap="dtoMap">
+		SELECT w.name as "Key",
+		SUM(ot.TotalAmount) as Value
+		From OrderTable ot LEFT JOIN Waiter w
+		on
+		ot.waiter_id=w.id
+		GROUP by w.name;
+	</select>
+
+	<select id="getTopFiveCategory" resultMap="dtoMap">
+		SELECT c.name as
+		"Key",SUM(oi.TotalPrice) as "Value"
+		FROM OrderItem oi LEFT JOIN
+		TBL_CATEGORY_PRODUCT cp
+		on oi.product_id=cp.product_id
+		LEFT JOIN
+		Category c
+		on cp.category_id=c.id
+		GROUP By c.name
+		ORDER BY
+		SUM(oi.TotalPrice) DESC
+		LIMIT 5;
+	</select>
+
+	<select id="getTopSalesCustomer" resultMap="dtoMap">
+		SELECT c.name as "Key" ,Sum(TotalAmount) as "Value"
+		FROM OrderItem oi INNER JOIN OrderTable ot
+		ON oi.order_id=ot.id
+		LEFT JOIN Customer c
+		ON ot.customer_id=c.id
+		GROUP BY c.name
+		ORDER BY Sum(TotalAmount) DESC
+		LIMIT 5
+	</select>
+
+	<select id="salesLastWeek" resultMap="dtoMap">
+		SELECT
+		DATE_FORMAT(OrderTable.date, '%d-%m-%y') as "Key",SUM(TotalAmount) as
+		"Value"
+		FROM OrderTable
+		WHERE OrderTable.date>= DATE(NOW()) - INTERVAL 7
+		DAY
+		GROUP by DATE_FORMAT(OrderTable.date, '%d-%m-%y')
+		ORDER BY
+		DATE_FORMAT(OrderTable.date, '%d-%m-%y') asc;
+	</select>
+
+	<select id="tableOrNotTable" resultMap="dtoMap">
+		SELECT CASE WHEN
+		OrderTable.waiter_id IS NULL THEN 'NULL' ELSE 'NOT NULL' END as "Key",
+		SUM(OrderTable.TotalAmount) as "Value"
+		FROM OrderTable
+		GROUP BY CASE
+		WHEN OrderTable.waiter_id IS NULL THEN 'NULL' ELSE 'NOT NULL'
+		END
+	</select>
+
+
+
+
+</sqlMap>
